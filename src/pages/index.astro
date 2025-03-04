@@ -1,8 +1,7 @@
 ---
 import GameDisplay from '../components/GameDisplay.svelte'
 import Editor from '../components/Editor.svelte'
-import LeftNavigation from '../components/LeftNavigation.svelte'
-import RightNavigation from '../components/RightNavigation.svelte'
+import Navigation from '../components/Navigation.svelte'
 import Layout from '../layouts/Layout.astro';
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
@@ -13,6 +12,5 @@ import Layout from '../layouts/Layout.astro';
 	<GameDisplay slot="game-display" client:load></GameDisplay>
 	<Editor slot="editor" client:load></Editor>
 
-	<LeftNavigation slot="left-navigation" client:load></LeftNavigation>
-	<RightNavigation slot="right-navigation" client:load></RightNavigation>
+	<Navigation slot="navigation" client:load></Navigation>
 </Layout>

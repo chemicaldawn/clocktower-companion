@@ -15,8 +15,7 @@
 			</div>
             <div id="mobile-navigation">
                 <div id="navigators">
-                    <slot name="left-navigation"></slot>
-                    <slot name="right-navigation"></slot>
+                    <slot name="navigation"></slot>
                 </div>
             </div>
             <div id="context">
@@ -129,10 +128,10 @@
             #navigators {
                 display: flex;
                 flex-direction: row;
-                justify-content: space-between;
+                justify-content: space-around;
 
                 pointer-events: none;
-                padding: 1rem;
+                padding: 2rem;
             }
         }
     }
