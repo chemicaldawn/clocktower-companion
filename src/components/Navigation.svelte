@@ -6,6 +6,26 @@
     let opacity = 0;
     let dist = 5;
 
+    let d : Date = new Date()
+
+    let hourHandPos = 0;
+    let minuteHandPos = 0;
+
+    let hourHandDefault = 0;
+    let minuteHandDefault = 0;
+
+    function getClockPositions() {
+        console.log(d.getHours(), d.getMinutes())
+
+        hourHandDefault = d.getHours() * 30 + d.getMinutes() * 0.5
+        minuteHandDefault = d.getMinutes() * 6
+
+        hourHandPos = hourHandDefault;
+        minuteHandPos = minuteHandDefault;
+    }
+
+    getClockPositions()
+    
     class NavItem {
         index : number
         image : string
@@ -42,8 +62,11 @@
 
         if (expanded) {
             opacity = 1
+            hourHandPos = 360
+            minuteHandPos = 720
         } else {
             opacity = 0
+            getClockPositions()
         }
 
         let delay = 0;
@@ -65,6 +88,8 @@
     </div>
     <div id="navigation" role="button" tabindex="0" onkeydown={toggleExpansion} ontouchstart={toggleExpansion}>
         <img src="/images/clock.svg" alt="clock">
+        <img src="/images/minutehand.svg" style:transform="rotate({minuteHandPos}deg) scale(1)" alt="clock">
+        <img src="/images/hourhand.svg" style:transform="rotate({hourHandPos}deg)" alt="clock">
         {#each nav_items as item}
             <div class="nav-item" role="button" style:transform={item.position} style:opacity="{opacity}"></div>
         {/each}
@@ -102,9 +127,18 @@
         z-index: 2;
         background-color: rgb(117, 53, 145);
 
+        container-type: size;
+
         display: flex;
         flex-direction: column;
         gap: 0;
+
+        img {
+            position: absolute;
+            width: 100cqw;
+
+            transition: transform 500ms ease-in-out;
+        }
 
         .nav-item {
             position: absolute;
