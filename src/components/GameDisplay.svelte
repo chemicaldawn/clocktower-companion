@@ -296,7 +296,7 @@
         <div id="grim" style:transition={animation} style:transform="translateY({translateY}cqh) scale({scale}) rotate({rotate}deg)">
             {#each tokens as token}
                 <div role="button" tabindex="{token.index}" class="{token.css}" onmouseup={() => {clickToken(token.index)}} ontouchend={() => {tapToken(token.index)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
-                    <img alt="token" src="/images/token.png">
+                    <img draggable="false" alt="token" src="/images/token.png">
                 </div>
             {/each}
         </div>
@@ -342,6 +342,8 @@
 
     #grim-container {
 
+        user-select: none;
+
         margin: 0 !important;
         width: 100%;
         height: auto;
@@ -369,11 +371,14 @@
                 background: none;
                 margin: 0;
 
-
                 img {
                     height: 100%;
                     width: 100%;
                 }
+            }
+
+            .token:focus {
+                border: none;
             }
         }
     }
