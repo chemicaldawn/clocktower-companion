@@ -363,8 +363,8 @@
                 width: 15cqh;
                 height: 15cqh;
 
+                border-radius: 0;
                 aspect-ratio: 1;
-                border-radius: 100%;
 
                 background-color: rgb(213, 195, 158);
                 margin: 0;
@@ -373,7 +373,7 @@
                     font-family: "Dumbledor";
                 }
             }
-            
+
             .token.self {
                 background-color: rgb(247, 232, 202);
             }
