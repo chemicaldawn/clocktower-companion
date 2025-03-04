@@ -296,7 +296,7 @@
         <div id="grim" style:transition={animation} style:transform="translateY({translateY}cqh) scale({scale}) rotate({rotate}deg)">
             {#each tokens as token}
                 <div role="button" tabindex="{token.index}" class="{token.css}" onmouseup={() => {clickToken(token.index)}} ontouchend={() => {tapToken(token.index)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
-                    <p class="character-name">{token.characterName}</p>
+                    <img alt="token" src="/images/token.png">
                 </div>
             {/each}
         </div>
@@ -366,16 +366,14 @@
                 border-radius: 0;
                 aspect-ratio: 1;
 
-                background-color: rgb(213, 195, 158);
+                background: none;
                 margin: 0;
 
-                .character-name {
-                    font-family: "Dumbledor";
-                }
-            }
 
-            .token.self {
-                background-color: rgb(247, 232, 202);
+                img {
+                    height: 100%;
+                    width: 100%;
+                }
             }
         }
     }
