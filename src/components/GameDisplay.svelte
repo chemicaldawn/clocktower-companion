@@ -310,7 +310,9 @@
 <style>
     #display-container {
         width: 100%;
-        margin:auto !important;
+
+        margin: 0 !important;
+        padding-top: 15vh;
     }
 
     #edit {
@@ -367,9 +369,17 @@
                 background-color: rgb(213, 195, 158);
                 margin: 0;
 
+                box-shadow: inset 0 0 2cqh rgb(125, 75, 22);
+                transition: box-shadow 150ms;
+
+
                 .character-name {
                     font-family: "Dumbledor";
                 }
+            }
+
+            .token:hover {
+                box-shadow: inset 0 0 4px rgb(255, 255, 255)
             }
 
             .token.self {
