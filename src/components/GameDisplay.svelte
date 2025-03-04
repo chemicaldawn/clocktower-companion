@@ -47,8 +47,17 @@
     export let editOpacity = 1;
     let animationSpeed = "150ms"
 
+    let mouseX = 0;
+    let mouseY = 0;
+
+    let mouseDeltaX = 0;
+    let mouseDeltaY = 0;
+    let dragging = false;
+
+    let touchDebounce = false;
     let touchX = 0;
     let touchY = 0;
+
     let touchDeltaX = 0;
     let touchDeltaY = 0;    
     let touchSensitivity = 50;
@@ -103,8 +112,6 @@
             scale = 3 - scootY / 300 
             rotate = scootTheta + -tilt * (360 / n)
         }
-
-        console.log(expanded, translateY, scale)
     }
 
     function selectToken(n : number) {
@@ -125,7 +132,42 @@
         }
     }
 
+    function mouseDown(e : MouseEvent) {
+        if (!touchDebounce) {
+            mouseX = e.clientX
+            mouseY = e.clientY
+
+            dragging = true
+            setTweening(false)
+        }
+    }
+
+    function mouseMove(e : MouseEvent) {
+        if (!touchDebounce && dragging) {
+            mouseDeltaX += e.movementX
+            mouseDeltaY += e.movementY
+
+            console.log(mouseDeltaX, mouseDeltaY)
+
+            orientTokens(-mouseDeltaX / 12, mouseDeltaY / 12)
+        }
+    }
+
+    function mouseUp(e : MouseEvent) {
+        if (!touchDebounce) {
+            interactionEnd(mouseDeltaX, mouseDeltaY)
+            dragging = false
+        }
+    }
+
+    function clickToken(i) {
+        if (!touchDebounce) {
+            interactToken(i)
+        }
+    }
+
     function onTouchStart(e) {
+        touchDebounce = true;
         touchX = e.touches[0].clientX;
         touchY = e.touches[0].clientY;
         setTweening(false)
@@ -139,6 +181,19 @@
     }
 
     function onTouchEnd(e) {
+        interactionEnd(touchDeltaX, touchDeltaY)
+    }
+
+    function tapToken(i) {
+        interactToken(i)
+    }
+
+    function interactToken(i : number) {
+        selectToken(i)
+        setExpanded(true)
+    }
+
+    function interactionEnd(deltaX : number, deltaY: number) {
         setTweening(true)
 
         let direction = 0
@@ -147,25 +202,44 @@
         }
 
         if (direction == 0 && expanded) {
-            if (touchDeltaX < -1 * touchSensitivity) {
+            if (deltaX < -1 * touchSensitivity) {
                 rotateGrim(-1)
-            } else if (touchDeltaX > touchSensitivity) {
+            } else if (deltaX > touchSensitivity) {
                 rotateGrim(1)
             }
         } else {
-            if (touchDeltaY < -1 * touchSensitivity) {
+            if (deltaY < -1 * touchSensitivity) {
                 setExpanded(true)
 
-            } else if (touchDeltaY > touchSensitivity) {
+            } else if (deltaY > touchSensitivity) {
 
+                console.log("yuh")
                 selectToken(0)
                 setExpanded(false)
             }
         }
 
+        mouseDeltaX = 0;
+        mouseDeltaY = 0;
         touchDeltaX = 0;
         touchDeltaY = 0;
         orientTokens(0, 0)
+    }
+
+    function generalInput(e : KeyboardEvent) {
+        if (e.key === "Escape") {
+            if (expanded) {
+                setExpanded(false)
+                orientTokens(0,0)
+            }
+        }
+    }
+
+    function nameInput(e : KeyboardEvent) {
+        if (e.key === "Enter") {
+            rotateGrim(-1)
+            orientTokens(0,0)
+        }
     }
 
     function rotateGrim(n : number) {
@@ -212,20 +286,23 @@
     orientTokens(0, 0)
 </script>
 
-<svelte:document ontouchstart={onTouchStart} ontouchmove={onTouchMove} ontouchend={onTouchEnd} />
+<svelte:document 
+    onmousedown={mouseDown} onmousemove={mouseMove} onmouseup={mouseUp}
+    ontouchstart={onTouchStart} ontouchmove={onTouchMove} ontouchend={onTouchEnd} 
+    onkeydown={generalInput}/>
 
 <div id="display-container">
     <div id="grim-container">
         <div id="grim" style:transition={animation} style:transform="translateY({translateY}cqh) scale({scale}) rotate({rotate}deg)">
             {#each tokens as token}
-                <div class="{token.css}" ontouchend={() => {selectToken(token.index); setExpanded(true)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
+                <div role="button" tabindex="{token.index}" class="{token.css}" onmouseup={() => {clickToken(token.index)}} ontouchend={() => {tapToken(token.index)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
                     <p class="character-name">{token.characterName}</p>
                 </div>
             {/each}
         </div>
     </div>
     <div id="edit" style:opacity="{editOpacity}" style:transform="scaleY({editScale})">
-        <input placeholder="enter name..." bind:value={selectedToken.name} type="text" id="edit-name" name="token-name">
+        <input placeholder="enter name..." onkeydown={nameInput} bind:value={selectedToken.name} type="text" id="edit-name" name="token-name">
     </div>
 </div>
 
