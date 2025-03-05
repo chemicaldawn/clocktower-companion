@@ -90,9 +90,9 @@
 
     let nav_items = [
         new NavItem(4, "eye.svg", "show roles", true),
-        new NavItem(3, "setup.svg", "game setup", false),
+        new NavItem(3, "script.svg", "script viewer", false),
         new NavItem(2, "notes.svg", "game notes", false),
-        new NavItem(1, "settings.svg", "app settings", false),
+        new NavItem(1, "setup.svg", "game setup", false),
         new NavItem(0, "tag.svg", "show player names", true)
     ]
 </script>
