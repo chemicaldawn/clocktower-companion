@@ -1,10 +1,10 @@
 <script lang="ts">
     import { transform } from "typescript";
 
-
     let expanded = false;
     let opacity = 0;
-    let dist = 5;
+    let dist = 5.25;
+    let offset = 0.625;
 
     let d : Date = new Date()
 
@@ -29,11 +29,13 @@
     class NavItem {
         index : number
         image : string
+        imagealt : string
         position : string
 
-        constructor(idx : number) {
+        constructor(idx : number, image : string, imagealt: string) {
             this.index = idx
-            this.image = ""
+            this.image = image
+            this.imagealt = imagealt
             this.resetPosition()
         }
 
@@ -51,7 +53,7 @@
 
         setPosition() {
             let angle = ((this.index + 1) / (nav_items.length + 1)) * Math.PI
-            this.position = `translate(${Math.cos(angle) * dist}rem, ${-Math.sin(angle) * dist}rem)`
+            this.position = `translate(${Math.cos(angle) * dist + offset}rem, ${-Math.sin(angle) * dist + offset}rem)`
             console.log(this.position)
         }
     }
@@ -76,26 +78,28 @@
     }
 
     let nav_items = [
-        new NavItem(0),
-        new NavItem(1),
-        new NavItem(2)
+        new NavItem(2, "setup.svg", "game setup"),
+        new NavItem(1, "notes.svg", "game notes"),
+        new NavItem(0, "settings.svg", "app settings")
     ]
 </script>
 
 <main>
     <div class="side-button">
-
+        <img alt="show roles" src="/images/icons/eye.svg">
     </div>
     <div id="navigation" role="button" tabindex="0" onkeydown={toggleExpansion} ontouchstart={toggleExpansion}>
         <img src="/images/clock.svg" alt="clock">
         <img src="/images/minutehand.svg" style:transform="rotate({minuteHandPos}deg) scale(1)" alt="clock">
         <img src="/images/hourhand.svg" style:transform="rotate({hourHandPos}deg)" alt="clock">
         {#each nav_items as item}
-            <div class="nav-item" role="button" style:transform={item.position} style:opacity="{opacity}"></div>
+            <div class="nav-item" role="button" style:transform={item.position} style:opacity="{opacity}">
+                <img alt={item.imagealt} src="/images/icons/{item.image}">
+            </div>
         {/each}
     </div>
     <div class="side-button">
-
+        <img alt="show names" src="/images/icons/tag.svg">
     </div>
 </main>
 
@@ -103,7 +107,7 @@
 
     main {
         display: flex;
-        gap: 2.5rem;
+        gap: 1.5rem;
     }
 
     .side-button {
@@ -113,7 +117,13 @@
 
         margin: auto;
 
-        background-color: aqua;
+        background-color: rgb(117, 53, 145);
+
+        img {
+            box-sizing: border-box;
+            margin: 20%;
+            width: 60%
+        }
     }
 
     #navigation {
@@ -151,8 +161,16 @@
             width: 3.25rem;
             height: 3.25rem;
 
+            container-type: size;
+
             transition: transform 150ms, opacity 180ms;
             transition-timing-function: cubic-bezier(0.64, 0.57, 0.67, 1.53);
+
+            img {
+                box-sizing: border-box;
+                margin: 17.5%;
+                width: 65%
+            }
 
         }
     }

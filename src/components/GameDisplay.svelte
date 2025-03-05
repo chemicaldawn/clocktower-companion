@@ -312,7 +312,7 @@
         width: 100%;
 
         margin: 0 !important;
-        padding-top: 15vh;
+        padding-top: 8vh;
     }
 
     #edit {
