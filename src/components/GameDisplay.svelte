@@ -1,8 +1,13 @@
+<svelte:options runes={true}></svelte:options>
+
 <script lang="ts">
+    import { handleInput, InputEvent } from "../utils/smoothInput";
+    import { floorMod } from "../utils/customMath";
+
     class Token {
 
         index : number
-        name : string
+        name : string = $state("")
         css : string
         x : number
         y : number
@@ -13,7 +18,6 @@
 
         constructor(index : number) {
             this.index = index
-            this.name = ""
             this.x = 0
             this.y = 0
 
@@ -29,7 +33,7 @@
         }
     }
 
-    let tokens : Token[] = [];
+    let tokens : Token[] = $state([]);
     let defaultPlayerCount = 12;
 
     for (let i = 0; i < defaultPlayerCount; i++) {
@@ -39,39 +43,34 @@
     let normalWidth = 15;
     let expandedWidth = 20;
 
-    export let translateY = 0;
-    export let scale = 0;
-    export let rotate = 0;
-    export let animation = "";
-    export let editScale = 0;
-    export let editOpacity = 1;
-    let animationSpeed = "150ms"
+    let inputX = 0;
+    let inputY = 0;
+    let inputDX = $state(0);
+    let inputDY = $state(0);  
 
-    let mouseX = 0;
-    let mouseY = 0;
-
-    let mouseDeltaX = 0;
-    let mouseDeltaY = 0;
     let dragging = false;
 
-    let touchDebounce = false;
-    let touchX = 0;
-    let touchY = 0;
+    let scootX = $derived(-inputDX / 12);
+    let scootY = $derived(inputDY / 10);
 
-    let touchDeltaX = 0;
-    let touchDeltaY = 0;    
+    let tilt = $state(0);
+    let selected = $derived(floorMod(tilt, tokens.length));
+    let selectedToken = $derived(tokens[selected]);
+    let expanded = $state(false)
+
+    let translateY = $derived(expanded ? (-100 + scootY/2) : scootY)
+    let scale = $derived(expanded ? (3 - scootY / 300) : (1 - scootY / 50))
+    let rotate = $derived(-tilt * ((Math.PI * 2) / tokens.length) + scootX / 75)
+ 
+    let editScale = $derived(expanded ? 1 : 0);
+    let editOpacity = $state(1)
+
+    let animationSpeed = $state(150)
+    let animation = $derived(animationSpeed > 0 ? `transform ${animationSpeed}ms` : "")
+
+    let touchDebounce = false;
     let touchSensitivity = 50;
 
-    let selected = 0;
-    let selectedToken;
-
-    let tilt = 0;
-    let expanded = false;
-
-    /**
-     * @param {number} scootTheta
-     * @param {number} scootY
-     */
     function placeTokens() {
 
         let n = tokens.length
@@ -95,207 +94,83 @@
 
             iTheta += deltaTheta;
         })
-
-        selectedToken = tokens[0]
     }
 
-    function orientTokens(scootTheta, scootY) {
+    function inputDown(e : InputEvent) {
+        inputX = e.inputX
+        inputY = e.inputY
+        dragging = true
+    }
 
-        let n = tokens.length
-
-        translateY = scootY
-        scale = 1 - scootY / 50
-        rotate = 0
-
-        if (expanded) {
-            translateY = -100 + scootY/2 
-            scale = 3 - scootY / 300 
-            rotate = scootTheta + -tilt * (360 / n)
+    function inputMove(e : InputEvent) {
+        if (dragging) {
+            animationSpeed = 0
+            inputDX = e.inputX - inputX
+            inputDY = e.inputY - inputY
         }
     }
 
-    function selectToken(n : number) {
-
-        if (expanded && selected != n) {
-            flashInfo()
-        } else {
-            selectedToken = tokens[n]
-        }
-
-        selected = n
-        tilt = n
-
-        let circleRatio = n / tokens.length
-
-        if (circleRatio > 0.5) {
-            tilt -= tokens.length
-        }
-    }
-
-    function mouseDown(e : MouseEvent) {
-        if (!touchDebounce) {
-            mouseX = e.clientX
-            mouseY = e.clientY
-
-            dragging = true
-            setTweening(false)
-        }
-    }
-
-    function mouseMove(e : MouseEvent) {
-        if (!touchDebounce && dragging) {
-            mouseDeltaX += e.movementX
-            mouseDeltaY += e.movementY
-
-            console.log(mouseDeltaX, mouseDeltaY)
-
-            orientTokens(-mouseDeltaX / 12, mouseDeltaY / 12)
-        }
-    }
-
-    function mouseUp(e : MouseEvent) {
-        if (!touchDebounce) {
-            interactionEnd(mouseDeltaX, mouseDeltaY)
-            dragging = false
-        }
-    }
-
-    function clickToken(i) {
-        if (!touchDebounce) {
-            interactToken(i)
-        }
-    }
-
-    function onTouchStart(e) {
-        touchDebounce = true;
-        touchX = e.touches[0].clientX;
-        touchY = e.touches[0].clientY;
-        setTweening(false)
-    }
-
-    function onTouchMove(e) {
-        touchDeltaX = e.touches[0].clientX - touchX
-        touchDeltaY = e.touches[0].clientY - touchY
-
-        orientTokens(-touchDeltaX / 12, touchDeltaY / 12)
-    }
-
-    function onTouchEnd(e) {
-        interactionEnd(touchDeltaX, touchDeltaY)
-    }
-
-    function tapToken(i) {
-        interactToken(i)
-    }
-
-    function interactToken(i : number) {
-        selectToken(i)
-        setExpanded(true)
-    }
-
-    function interactionEnd(deltaX : number, deltaY: number) {
-        setTweening(true)
+    function inputEnd(e : InputEvent) {
+        animationSpeed = 150
 
         let direction = 0
-        if (Math.abs(touchDeltaY) > Math.abs(touchDeltaX)) {
+        if (Math.abs(inputDX) < Math.abs(inputDY)) {
             direction = 1
         }
 
         if (direction == 0 && expanded) {
-            if (deltaX < -1 * touchSensitivity) {
-                rotateGrim(-1)
-            } else if (deltaX > touchSensitivity) {
-                rotateGrim(1)
+            if (inputDX < -1 * touchSensitivity) {
+                tilt -= 1
+            } else if (inputDX > touchSensitivity) {
+                tilt += 1
             }
         } else {
-            if (deltaY < -1 * touchSensitivity) {
-                setExpanded(true)
-
-            } else if (deltaY > touchSensitivity) {
-
-                console.log("yuh")
-                selectToken(0)
-                setExpanded(false)
+            if (inputDY < -1 * touchSensitivity) {
+                expanded = true
+            } else if (inputDY > touchSensitivity) {
+                tilt = 0
+                expanded = false
             }
         }
 
-        mouseDeltaX = 0;
-        mouseDeltaY = 0;
-        touchDeltaX = 0;
-        touchDeltaY = 0;
-        orientTokens(0, 0)
+        inputDX = 0
+        inputDY = 0
+        dragging = false
+    }
+
+    function interactToken(i : number) {
+        animationSpeed = 150
+        tilt = i
+        expanded = true
     }
 
     function generalInput(e : KeyboardEvent) {
         if (e.key === "Escape") {
             if (expanded) {
-                setExpanded(false)
-                orientTokens(0,0)
+                expanded = false
             }
         }
     }
 
     function nameInput(e : KeyboardEvent) {
         if (e.key === "Enter") {
-            rotateGrim(-1)
-            orientTokens(0,0)
+            tilt += 1
         }
-    }
-
-    function rotateGrim(n : number) {
-        tilt += n
-        selected = floorMod(selected + n, tokens.length)
-        flashInfo()
-    }
-
-    function setExpanded(val : boolean) {
-        if (val) {
-            expanded = true
-            editScale = 1
-        } else {
-            expanded = false
-            editScale = 0
-        }
-    }
-
-    function setTweening(val : boolean) {
-        if (val) {
-            animation = "transform " + animationSpeed
-        } else {
-            animation = ""
-        }
-    }
-
-    function flashInfo() {
-        editOpacity = 0
-        setTimeout(() => {
-            selectedToken = tokens[selected]
-            editOpacity = 1
-        }, 150)
-    }
-
-    function floorMod(n : number, divisor : number) {
-        while (n < 0) {
-            n += divisor
-        }
-
-        return n % divisor
     }
 
     placeTokens()
-    orientTokens(0, 0)
 </script>
 
 <svelte:document 
-    onmousedown={mouseDown} onmousemove={mouseMove} onmouseup={mouseUp}
-    ontouchstart={onTouchStart} ontouchmove={onTouchMove} ontouchend={onTouchEnd} 
+    onmousedown={handleInput(inputDown)} onmousemove={handleInput(inputMove)} onmouseup={handleInput(inputEnd)}
+    ontouchstart={handleInput(inputDown)} ontouchmove={handleInput(inputMove)} ontouchend={handleInput(inputEnd)}
     onkeydown={generalInput}/>
 
 <div id="display-container">
     <div id="grim-container">
-        <div id="grim" style:transition={animation} style:transform="translateY({translateY}cqh) scale({scale}) rotate({rotate}deg)">
+        <div id="grim" style:transition={animation} style:transform="translateY({translateY}cqh) scale({scale}) rotate({rotate}rad)">
             {#each tokens as token}
-                <div role="button" tabindex="{token.index}" class="{token.css}" onmouseup={() => {clickToken(token.index)}} ontouchend={() => {tapToken(token.index)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
+                <div role="button" tabindex="{token.index}" class="{token.css}" onmouseup={() => {interactToken(token.index)}} ontouchend={() => {interactToken(token.index)}} style:transform="translate({token.x}cqh,{token.y}cqh)">
                     <img draggable="false" alt="token" src="/images/token.png">
                 </div>
             {/each}
@@ -316,7 +191,6 @@
     }
 
     #edit {
-        font-family: "Dumbledor";
         font-size: 3rem;
         color: white;
         transition: all 150ms;
@@ -327,7 +201,7 @@
             border-radius: 1rem;
 
             color: white;
-            font-family: "Dumbledor";
+            font-family: "Sorts Mill Goudy";
             font-size: 2.5rem;
 
             max-width: 80%;

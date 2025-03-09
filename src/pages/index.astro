@@ -1,6 +1,6 @@
 ---
 import GameDisplay from '../components/GameDisplay.svelte'
-import Editor from '../components/Editor.svelte'
+import Context from '../components/Context.svelte'
 import Navigation from '../components/Navigation.svelte'
 import Layout from '../layouts/Layout.astro';
 
@@ -10,7 +10,7 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout>
 	<GameDisplay slot="game-display" client:load></GameDisplay>
-	<Editor slot="editor" client:load></Editor>
+	<Context slot="context" client:load></Editor>
 
 	<Navigation slot="navigation" client:load></Navigation>
 </Layout>
