@@ -1,41 +1,38 @@
+<svelte:options runes={true}></svelte:options>
+
 <script lang="ts">
     import { transform } from "typescript";
 
-    let expanded = false;
-    let opacity = 0;
+    let expanded = $state(false);
+    let opacity = $derived(expanded ? 1 : 0);
     let dist = 5.25;
     let offset = 0.625;
 
     let d : Date = new Date()
 
-    let hourHandPos = 0;
-    let minuteHandPos = 0;
-
-    let hourHandDefault = 0;
-    let minuteHandDefault = 0;
-
-    function getClockPositions() {
-        console.log(d.getHours(), d.getMinutes())
-
-        hourHandDefault = d.getHours() * 30 + d.getMinutes() * 0.5
-        minuteHandDefault = d.getMinutes() * 6
-
-        hourHandPos = hourHandDefault;
-        minuteHandPos = minuteHandDefault;
-    }
-
-    getClockPositions()
+    let hourHandDefault = d.getHours() * 30 + d.getMinutes() * 0.5
+    let minuteHandDefault = d.getMinutes() * 6
+    let hourHandPos = $derived(expanded ? 360 : hourHandDefault)
+    let minuteHandPos = $derived(expanded ? 720 : minuteHandDefault)
     
     class NavItem {
+
+        expandedPosX = $state(0)
+        expandedPosY = $state(0)
+        posX = $derived(expanded ? this.expandedPosX : 0)
+        posY = $derived(expanded ? this.expandedPosY : 0)
+
+        css = $derived(`translate(${this.posX}rem, ${this.posY}rem)`)
+
         index : number
         image : string
         imagealt : string
-        position : string
         small : boolean
 
         class : string
 
-        constructor(idx : number, image : string, imagealt: string, small:boolean) {
+        constructor(idx : number, len : number, image : string, imagealt: string, small:boolean) {
+
             this.index = idx
             this.image = image
             this.imagealt = imagealt
@@ -47,54 +44,20 @@
                 this.class = "main-button"
             }
 
-            this.resetPosition()
-        }
+            let angle = ((this.index) / (len)) * Math.PI
 
-        togglePosition() {
-            if (expanded) { 
-                this.setPosition()
-            } else {
-                this.resetPosition()
-            }
-        }
-
-        resetPosition() {
-            this.position = "translate(0,0)"
-        }
-
-        setPosition() {
-            let angle = ((this.index) / (nav_items.length - 1)) * Math.PI
-            this.position = `translate(${Math.cos(angle) * dist + offset}rem, ${-Math.sin(angle) * dist + offset}rem)`
-            console.log(this.position)
+            this.expandedPosX = Math.cos(angle) * dist + offset
+            this.expandedPosY = -Math.sin(angle) * dist + offset
         }
     }
 
-    function toggleExpansion(e) {
-        console.log("dig")
-        expanded = !expanded
-
-        if (expanded) {
-            opacity = 1
-            hourHandPos = 360
-            minuteHandPos = 720
-        } else {
-            opacity = 0
-            getClockPositions()
-        }
-
-        let delay = 0;
-        nav_items.forEach((item) => {
-            item.togglePosition()
-        })
-    }
-
-    let nav_items = [
-        new NavItem(4, "eye.svg", "show roles", true),
-        new NavItem(3, "script.svg", "script viewer", false),
-        new NavItem(2, "notes.svg", "game notes", false),
-        new NavItem(1, "setup.svg", "game setup", false),
-        new NavItem(0, "tag.svg", "show player names", true)
-    ]
+    let nav_items = $state([
+        new NavItem(4, 4, "eye.svg", "show roles", true),
+        new NavItem(3, 4, "script.svg", "script viewer", false),
+        new NavItem(2, 4, "notes.svg", "game notes", false),
+        new NavItem(1, 4, "setup.svg", "game setup", false),
+        new NavItem(0, 4, "tag.svg", "show player names", true)
+    ])
 </script>
 
 <main>
@@ -102,12 +65,12 @@
         <img alt="help" src="/images/icons/help.svg">
     </div>
     <div id="central-nav">
-        <div id="navigation" role="button" tabindex="0" onkeydown={toggleExpansion} ontouchstart={toggleExpansion}>
+        <div id="navigation" role="button" tabindex="0" onkeydown={() => {expanded = !expanded}} ontouchstart={() => {expanded = !expanded}}>
             <img src="/images/clock.svg" alt="clock">
             <img src="/images/minutehand.svg" style:transform="rotate({minuteHandPos}deg) scale(1)" alt="clock">
             <img src="/images/hourhand.svg" style:transform="rotate({hourHandPos}deg)" alt="clock">
             {#each nav_items as item}
-                <div class={item.class} role="button" style:transform={item.position} style:opacity="{opacity}">
+                <div class={item.class} role="button" style:transform={item.css} style:opacity="{opacity}">
                     <img alt={item.imagealt} src="/images/icons/{item.image}">
                 </div>
             {/each}
